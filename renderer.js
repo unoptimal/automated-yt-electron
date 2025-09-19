@@ -68,23 +68,47 @@ function stopRecording() {
 }
 
 async function saveFiles() {
-  const timestamp = Date.now();
-
-  // Save the screen recording
-  if (screenChunks.length > 0) {
-    const screenBlob = new Blob(screenChunks, { type: 'video/webm' });
-    const screenData = new Uint8Array(await screenBlob.arrayBuffer());
-    await window.electronAPI.saveFile({ name: `SOURCE-${timestamp}.webm`, buffer: screenData });
+    const timestamp = Date.now();
+    let sourcePath = null;
+    let reactionPath = null;
+  
+    // Save the screen recording and get its file path
+    if (screenChunks.length > 0) {
+      const screenBlob = new Blob(screenChunks, { type: 'video/webm' });
+      const screenData = new Uint8Array(await screenBlob.arrayBuffer());
+      sourcePath = await window.electronAPI.saveFile({ name: `temp-source-${timestamp}.webm`, buffer: screenData });
+    }
+  
+    // Save the webcam recording and get its file path
+    if (webcamChunks.length > 0) {
+      const webcamBlob = new Blob(webcamChunks, { type: 'video/webm' });
+      const webcamData = new Uint8Array(await webcamBlob.arrayBuffer());
+      reactionPath = await window.electronAPI.saveFile({ name: `temp-reaction-${timestamp}.webm`, buffer: webcamData });
+    }
+  
+    // Clear chunks for the next session
+    screenChunks = [];
+    webcamChunks = [];
+  
+    // Corrected logic: Check if both files exist and then proceed
+    if (sourcePath && reactionPath) {
+      console.log("Both files saved, telling main process to stitch.");
+  
+      // This is the correct way to call the IPC handler and get the result.
+      // The main process will return the final outputPath.
+      const outputPath = await window.electronAPI.stitchVideos({ sourcePath, reactionPath });
+  
+      // Then, proceed with the upload
+      try {
+        console.log("Stitching complete. Starting YouTube upload...");
+        const videoId = await window.electronAPI.uploadVideo({
+          filePath: outputPath,
+          title: "My Reaction Video",
+          description: "A cool reaction video created with my Electron app."
+        });
+        console.log(`✅ Video uploaded with ID: ${videoId}`);
+      } catch (err) {
+        console.error("Video upload failed:", err);
+      }
+    }
   }
-
-  // Save the webcam recording
-  if (webcamChunks.length > 0) {
-    const webcamBlob = new Blob(webcamChunks, { type: 'video/webm' });
-    const webcamData = new Uint8Array(await webcamBlob.arrayBuffer());
-    await window.electronAPI.saveFile({ name: `REACTION-${timestamp}.webm`, buffer: webcamData });
-  }
-
-  // Clear chunks for the next session
-  screenChunks = [];
-  webcamChunks = [];
-}
