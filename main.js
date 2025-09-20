@@ -3,6 +3,8 @@ const {
   BrowserWindow,
   ipcMain,
   desktopCapturer,
+  Tray,
+  Menu,
   session,
 } = require("electron");
 const path = require("path");
@@ -16,6 +18,7 @@ const ffmpegPath = require("ffmpeg-static");
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
 
 let mainWindow;
+let tray = null;
 // RE-ADDED: A variable to hold the target window title from the Chrome extension.
 let targetWindowTitle = "";
 let messageQueue = null;
@@ -24,13 +27,14 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
   });
 
   mainWindow.loadFile("index.html");
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
   mainWindow.webContents.on("did-finish-load", () => {
     console.log("Renderer has finished loading.");
@@ -188,11 +192,14 @@ app.whenReady().then(() => {
           redirect_uris[0]
         );
 
-        // Check for existing token, if not found, generate a new one
         const tokenPath = path.join(app.getPath("userData"), "token.json");
+
+        // The rest of your code stays the same
         if (fs.existsSync(tokenPath)) {
+          // This will now always be false
           oAuth2Client.setCredentials(JSON.parse(fs.readFileSync(tokenPath)));
         } else {
+          // THIS 'ELSE' BLOCK WILL NOW ALWAYS RUN
           const authUrl = oAuth2Client.generateAuthUrl({
             access_type: "offline",
             scope: SCOPES,
@@ -238,7 +245,7 @@ app.whenReady().then(() => {
               description,
             },
             status: {
-              privacyStatus: "private", // "private" for testing
+              privacyStatus: "public", // "private" for testing
             },
           },
           media: {

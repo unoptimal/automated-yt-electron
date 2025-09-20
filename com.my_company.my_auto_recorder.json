@@ -1,7 +1,0 @@
-{
-  "name": "com.my_company.my_auto_recorder",
-  "description": "My auto recorder app.",
-  "path": "/Users/justinmguo/unoptimal/automated-yt-electron/start-script.sh",
-  "type": "stdio",
-  "allowed_origins": ["chrome-extension://egnaafkdmnhmaejihbehjakihlgjblgj/"]
-}

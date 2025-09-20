@@ -262,7 +262,7 @@ async function saveFiles() {
         title,
         description,
       });
-      console.log(`✅ Video uploaded (private) with ID: ${videoId}`);
+      console.log(`✅ Video uploaded with ID: ${videoId}`);
     } catch (err) {
       console.error("❌ Video upload failed:", err);
     } finally {
