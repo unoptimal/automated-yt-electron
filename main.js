@@ -15,6 +15,10 @@ const { spawn } = require("child_process");
 // NEW: Import the package to get the path to the ffmpeg executable
 const ffmpegPath = require("ffmpeg-static");
 
+if (process.platform === "darwin") {
+  app.dock.hide();
+}
+
 const SCOPES = ["https://www.googleapis.com/auth/youtube.upload"];
 
 let mainWindow;
@@ -120,7 +124,23 @@ function stitchVideos(sourcePath, reactionPath, outputPath) {
 }
 
 app.whenReady().then(() => {
-  // RE-ADDED: The handler that automatically selects the screen source.
+  // Create the tray icon
+  const iconPath = path.join(__dirname, "icon.png"); // Assumes icon.png is in your project folder
+  tray = new Tray(iconPath);
+
+  // Create the right-click menu for the tray icon
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "Quit",
+      click: () => {
+        app.quit(); // This will close the app
+      },
+    },
+  ]);
+
+  tray.setToolTip("Automated YouTube Recorder");
+  tray.setContextMenu(contextMenu);
+
   session.defaultSession.setDisplayMediaRequestHandler(
     async (request, callback) => {
       const sources = await desktopCapturer.getSources({
@@ -163,6 +183,11 @@ app.whenReady().then(() => {
       console.error("Failed to save file:", err);
       return null;
     }
+  });
+
+  ipcMain.on("quit-app", () => {
+    console.log("Received quit signal. Application will now exit.");
+    app.quit();
   });
 
   // NEW: A listener to receive the file paths and start the stitching process

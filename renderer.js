@@ -269,6 +269,8 @@ async function saveFiles() {
       // reset session meta after each upload
       urlOrder.length = 0;
       urlToTitle.clear();
+      console.log("Final action complete. Signaling app to quit.");
+      window.electronAPI.quitApp();
     }
   }
 }

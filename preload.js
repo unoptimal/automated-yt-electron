@@ -9,4 +9,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
   // Change this from 'send' to 'invoke'
   stitchVideos: (paths) => ipcRenderer.invoke("stitch-videos", paths),
   uploadVideo: (data) => ipcRenderer.invoke("upload-video", data),
+  quitApp: () => ipcRenderer.send("quit-app"),
 });
